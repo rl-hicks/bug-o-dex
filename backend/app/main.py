@@ -1,8 +1,18 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.database import check_database_connection
 
 app = FastAPI(title="Bug-O-Dex API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.cors_origins],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
