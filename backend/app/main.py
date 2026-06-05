@@ -11,9 +11,13 @@ from app.models import BugEntry
 from datetime import date
 from pydantic import BaseModel
 
+from app.routers import auth
+
 
 
 app = FastAPI(title="Bug-O-Dex API")
+
+app.include_router(auth.router)
 
 app.add_middleware(
     CORSMiddleware,
