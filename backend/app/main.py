@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import check_database_connection
-from app.dependencies import get_db
-from app.models import BugEntry
+from app.dependencies import get_current_user, get_db
+from app.models import BugEntry, User
 
 from datetime import date
 from pydantic import BaseModel
@@ -64,8 +64,15 @@ def database_check():
         raise HTTPException(status_code=500, detail=str(exc))
 
 @app.get("/bug-entries")
-def list_bug_entries(db: Session = Depends(get_db)):
-    statement = select(BugEntry).order_by(BugEntry.created_at.desc())
+def list_bug_entries(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    statement = (
+        select(BugEntry)
+        .where(BugEntry.user_id == current_user.id)
+        .order_by(BugEntry.created_at.desc())
+    )
     bug_entries = db.scalars(statement).all()
 
     return bug_entries
@@ -74,9 +81,11 @@ def list_bug_entries(db: Session = Depends(get_db)):
 def get_bug_entry(
     bug_entry_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     statement = select(BugEntry).where(
-        BugEntry.id == bug_entry_id
+        BugEntry.id == bug_entry_id,
+        BugEntry.user_id == current_user.id,
     )
 
     bug_entry = db.scalar(statement)
@@ -94,8 +103,12 @@ def update_bug_entry(
     bug_entry_id: str,
     payload: BugEntryUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    statement = select(BugEntry).where(BugEntry.id == bug_entry_id)
+    statement = select(BugEntry).where(
+        BugEntry.id == bug_entry_id,
+        BugEntry.user_id == current_user.id,
+    )
     bug_entry = db.scalar(statement)
 
     if bug_entry is None:
@@ -120,11 +133,10 @@ def update_bug_entry(
 def create_bug_entry(
     payload: BugEntryCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    test_user_id = "4671ee4e-dac9-45c1-a5fa-89262f17dc4f"
-
     bug_entry = BugEntry(
-        user_id=test_user_id,
+        user_id=current_user.id,
         image_url=payload.image_url,
         common_name=payload.common_name,
         category=payload.category,
@@ -148,9 +160,11 @@ def create_bug_entry(
 def delete_bug_entry(
     bug_entry_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     statement = select(BugEntry).where(
-        BugEntry.id == bug_entry_id
+        BugEntry.id == bug_entry_id,
+        BugEntry.user_id == current_user.id,
     )
 
     bug_entry = db.scalar(statement)
