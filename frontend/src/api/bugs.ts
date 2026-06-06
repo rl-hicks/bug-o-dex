@@ -26,6 +26,29 @@ export type BugEntry = {
   date_found: string | null;
 };
 
+export type CreateBugEntryInput = {
+  image_url: string;
+  common_name: string;
+  category?: string;
+  ai_identification?: string;
+  confidence_note?: string;
+  short_description?: string;
+  safety_note?: string;
+  location_context?: string;
+  date_found?: string;
+};
+
+export type UpdateBugEntryInput = {
+  common_name?: string;
+  category?: string;
+  short_description?: string;
+  location_context?: string;
+  date_found?: string;
+  ai_identification?: string;
+  confidence_note?: string;
+  safety_note?: string;
+};
+
 export async function getBugEntries(): Promise<BugEntry[]> {
   const response = await fetch(
     `${API_BASE_URL}/bug-entries`,
@@ -51,4 +74,77 @@ export async function getBugEntry(id: string): Promise<BugEntry> {
   }
 
   return response.json();
+}
+
+export async function createBugEntry(
+  input: CreateBugEntryInput
+): Promise<BugEntry> {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Missing access token. Please log in again.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/bug-entries`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Create bug entry failed: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
+}
+
+export async function updateBugEntry(
+  id: string,
+  input: UpdateBugEntryInput
+): Promise<BugEntry> {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Missing access token. Please log in again.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/bug-entries/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Update bug entry failed: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
+}
+
+export async function deleteBugEntry(id: string): Promise<void> {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Missing access token. Please log in again.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/bug-entries/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Delete bug entry failed: ${response.status} ${errorText}`);
+  }
 }

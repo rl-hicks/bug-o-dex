@@ -3,6 +3,9 @@ import { getHealth } from "./api/client";
 import { CollectionPage } from "./pages/CollectionPage";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { BugDetailPage } from "./pages/BugDetailPage";
+import { UploadTestPage } from "./pages/UploadTestPage";
+import { CreateBugPage } from "./pages/CreateBugPage";
+import { UploadPage } from "./pages/UploadPage";
 
 function App() {
   const [backendStatus, setBackendStatus] = useState("loading...");
@@ -29,6 +32,9 @@ function App() {
           <Route path="/" element={<p>Welcome to Bug-O-Dex.</p>} />
           <Route path="/collection" element={<CollectionPage />} />
           <Route path="/bug-entries/:id" element={<BugDetailPage />} />
+          <Route path="/upload-test" element={<UploadTestPage />} />
+          <Route path="/create-bug" element={<CreateBugPage />} />
+          <Route path="/upload" element={<UploadPage />} />
         </Routes>
       </main>
     </BrowserRouter>
