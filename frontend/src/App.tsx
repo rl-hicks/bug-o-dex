@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getHealth } from "./api/client";
+import { CollectionPage } from "./pages/CollectionPage";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 
 function App() {
   const [backendStatus, setBackendStatus] = useState("loading...");
@@ -11,10 +13,23 @@ function App() {
   }, []);
 
   return (
-    <main>
-      <h1>Bug-O-Dex</h1>
-      <p>Backend status: {backendStatus}</p>
-    </main>
+    <BrowserRouter>
+      <main>
+        <h1>Bug-O-Dex</h1>
+        <p>Backend status: {backendStatus}</p>
+
+        <nav>
+          <Link to="/collection">Collection</Link>
+        </nav>
+
+        <hr />
+
+        <Routes>
+          <Route path="/" element={<p>Welcome to Bug-O-Dex.</p>} />
+          <Route path="/collection" element={<CollectionPage />} />
+        </Routes>
+      </main>
+    </BrowserRouter>
   );
 }
 
