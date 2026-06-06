@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getHealth } from "./api/client";
 import { CollectionPage } from "./pages/CollectionPage";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { BugDetailPage } from "./pages/BugDetailPage";
 
 function App() {
   const [backendStatus, setBackendStatus] = useState("loading...");
@@ -27,6 +28,7 @@ function App() {
         <Routes>
           <Route path="/" element={<p>Welcome to Bug-O-Dex.</p>} />
           <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/bug-entries/:id" element={<BugDetailPage />} />
         </Routes>
       </main>
     </BrowserRouter>

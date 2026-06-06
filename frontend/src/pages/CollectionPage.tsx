@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import type { BugEntry } from "../api/bugs";
 import { getBugEntries } from "../api/bugs";
 
+import { Link } from "react-router-dom";
+
 export function CollectionPage() {
   const [bugEntries, setBugEntries] = useState<BugEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,19 +43,28 @@ export function CollectionPage() {
 
       <div>
         {bugEntries.map((bug) => (
-          <article key={bug.id}>
-            <img
-              src={bug.image_url}
-              alt={bug.common_name}
-              width="200"
-            />
+            <Link
+                key={bug.id}
+                to={`/bug-entries/${bug.id}`}
+            >
+                <article>
+                <img
+                    src={bug.image_url}
+                    alt={bug.common_name}
+                    width="200"
+                />
 
-            <h2>{bug.common_name}</h2>
+                <h2>{bug.common_name}</h2>
 
-            {bug.category && <p>Category: {bug.category}</p>}
+                {bug.category && (
+                    <p>Category: {bug.category}</p>
+                )}
 
-            {bug.date_found && <p>Found: {bug.date_found}</p>}
-          </article>
+                {bug.date_found && (
+                    <p>Found: {bug.date_found}</p>
+                )}
+                </article>
+            </Link>
         ))}
       </div>
     </main>
