@@ -12,12 +12,16 @@ from datetime import date
 from pydantic import BaseModel
 
 from app.routers import auth
+from app.routers import uploads
+from app.routers import identify
 
 
 
 app = FastAPI(title="Bug-O-Dex API")
 
 app.include_router(auth.router)
+app.include_router(uploads.router)
+app.include_router(identify.router)
 
 app.add_middleware(
     CORSMiddleware,
