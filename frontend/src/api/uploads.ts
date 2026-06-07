@@ -1,3 +1,5 @@
+import { logoutAndRedirect } from "../utils/auth";
+
 const API_BASE_URL = "http://localhost:8000";
 
 export type UploadImageResponse = {
@@ -8,7 +10,8 @@ export async function uploadImage(file: File): Promise<UploadImageResponse> {
   const token = localStorage.getItem("access_token");
 
   if (!token) {
-    throw new Error("Missing access token. Please log in again.");
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
   }
 
   const formData = new FormData();
@@ -21,6 +24,11 @@ export async function uploadImage(file: File): Promise<UploadImageResponse> {
     },
     body: formData,
   });
+
+  if (response.status === 401) {
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
+  }
 
   if (!response.ok) {
     const errorText = await response.text();

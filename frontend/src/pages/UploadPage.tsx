@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import { createBugEntry } from "../api/bugs";
 import { identifyBug, type IdentifyResponse } from "../api/identify";
 import { uploadImage } from "../api/uploads";
@@ -66,19 +68,28 @@ export function UploadPage() {
     }
 
     setIsIdentifying(true);
-    setStatus("Uploading image...");
     setUploadedImageUrl("");
     setIdentifyResult(null);
     setCreatedEntryId("");
 
-    try {
-      const uploadResult = await uploadImage(selectedFile);
-      setUploadedImageUrl(uploadResult.image_url);
+    let uploadedUrl = "";
 
+    try {
+      setStatus("Uploading image...");
+      const uploadResult = await uploadImage(selectedFile);
+      uploadedUrl = uploadResult.image_url;
+      setUploadedImageUrl(uploadedUrl);
+    } catch {
+      setStatus("Image upload failed. Please try again.");
+      setIsIdentifying(false);
+      return;
+    }
+
+    try {
       setStatus("Image uploaded. Identifying bug...");
 
       const result = await identifyBug({
-        image_url: uploadResult.image_url,
+        image_url: uploadedUrl,
         location_context: locationContext.trim(),
         date_found: dateFound || undefined,
         notes: notes.trim() || undefined,
@@ -86,10 +97,41 @@ export function UploadPage() {
 
       setIdentifyResult(result);
       setStatus("Identification complete. Review the result before saving.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown upload/identify error.";
-      setStatus(message);
+    } catch {
+      setStatus("Bug identification failed. Please try again.");
+    } finally {
+      setIsIdentifying(false);
+    }
+  }
+
+  async function handleRetry() {
+    if (!uploadedImageUrl) {
+      setStatus("Upload an image before retrying identification.");
+      return;
+    }
+
+    if (!locationContext.trim()) {
+      setStatus("Add approximate location/context.");
+      return;
+    }
+
+    setIsIdentifying(true);
+    setStatus("Retrying identification...");
+    setIdentifyResult(null);
+    setCreatedEntryId("");
+
+    try {
+      const result = await identifyBug({
+        image_url: uploadedImageUrl,
+        location_context: locationContext.trim(),
+        date_found: dateFound || undefined,
+        notes: notes.trim() || undefined,
+      });
+
+      setIdentifyResult(result);
+      setStatus("Identification complete. Review the result before saving.");
+    } catch {
+      setStatus("Bug identification failed. Please try again.");
     } finally {
       setIsIdentifying(false);
     }
@@ -120,53 +162,20 @@ export function UploadPage() {
 
       setCreatedEntryId(createdEntry.id);
       setStatus("Bug entry saved to collection.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown save error.";
-      setStatus(message);
+    } catch {
+      setStatus("Could not save bug entry. Please try again.");
     } finally {
       setIsSaving(false);
-    }
-  }
-
-  async function handleRetry() {
-    if (!uploadedImageUrl) {
-      setStatus("Upload an image before retrying identification.");
-      return;
-    }
-
-    if (!locationContext.trim()) {
-      setStatus("Add approximate location/context.");
-      return;
-    }
-
-    setIsIdentifying(true);
-    setStatus("Retrying identification...");
-    setIdentifyResult(null);
-    setCreatedEntryId("");
-
-    try {
-      const result = await identifyBug({
-        image_url: uploadedImageUrl,
-        location_context: locationContext.trim(),
-        date_found: dateFound || undefined,
-        notes: notes.trim() || undefined,
-      });
-
-      setIdentifyResult(result);
-      setStatus("Identification complete. Review the result before saving.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown retry error.";
-      setStatus(message);
-    } finally {
-      setIsIdentifying(false);
     }
   }
 
   return (
     <main style={{ padding: "2rem", maxWidth: "720px" }}>
       <h1>Upload Bug</h1>
+
+      <p>
+        <Link to="/collection">View collection</Link>
+      </p>
 
       <p>
         Add a bug photo and basic discovery context. This is the real E1 upload
@@ -242,7 +251,7 @@ export function UploadPage() {
           </label>
         </div>
 
-        <button type="submit" disabled={isIdentifying || isSaving}>
+        <button type="submit" disabled={isIdentifying}>
           {isIdentifying ? "Identifying..." : "Identify Bug"}
         </button>
       </form>
@@ -268,72 +277,77 @@ export function UploadPage() {
       )}
 
       {identifyResult && uploadedImageUrl && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2>Review AI Result</h2>
+        <>
+          <section style={{ marginTop: "2rem" }}>
+            <h2>Review AI Result</h2>
 
-          <img
-            src={uploadedImageUrl}
-            alt="Uploaded bug"
-            style={{
-              maxWidth: "100%",
-              width: "320px",
-              borderRadius: "12px",
-              display: "block",
-              marginBottom: "1rem",
-            }}
-          />
+            <img
+              src={uploadedImageUrl}
+              alt="Uploaded bug"
+              style={{
+                maxWidth: "100%",
+                width: "320px",
+                borderRadius: "12px",
+                display: "block",
+                marginBottom: "1rem",
+              }}
+            />
 
-          <p>
-            <strong>Likely common name:</strong> {identifyResult.common_name}
-          </p>
+            <p>
+              <strong>Likely common name:</strong> {identifyResult.common_name}
+            </p>
 
-          <p>
-            <strong>Category:</strong> {identifyResult.category}
-          </p>
+            <p>
+              <strong>Category:</strong> {identifyResult.category}
+            </p>
 
-          <p>
-            <strong>Description:</strong> {identifyResult.short_description}
-          </p>
+            <p>
+              <strong>Description:</strong> {identifyResult.short_description}
+            </p>
 
-          <p>
-            <strong>Confidence:</strong> {identifyResult.confidence_note}
-          </p>
+            <p>
+              <strong>Confidence:</strong> {identifyResult.confidence_note}
+            </p>
 
-          <p>
-            <strong>Safety note:</strong> {identifyResult.safety_note}
-          </p>
+            <p>
+              <strong>Safety note:</strong> {identifyResult.safety_note}
+            </p>
 
-          <p>
-            <strong>Disclaimer:</strong> {identifyResult.best_guess_disclaimer}
-          </p>
+            <p>
+              <strong>Disclaimer:</strong>{" "}
+              {identifyResult.best_guess_disclaimer}
+            </p>
 
-          <button type="button" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save"}
-          </button>
+            <button type="button" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </button>
 
-          <button
-            type="button"
-            onClick={handleRetry}
-            disabled={isIdentifying || isSaving}
-            style={{ marginLeft: "0.5rem" }}
-          >
-            {isIdentifying ? "Retrying..." : "Retry"}
-          </button>
-        </section>
-      )}
+            <button
+              type="button"
+              onClick={handleRetry}
+              disabled={isIdentifying}
+              style={{ marginLeft: "0.5rem" }}
+            >
+              {isIdentifying ? "Retrying..." : "Retry"}
+            </button>
+          </section>
 
-      {createdEntryId && (
-        <div style={{ marginTop: "1rem" }}>
-          <p>Saved to collection.</p>
+          {createdEntryId && (
+            <div style={{ marginTop: "1rem" }}>
+              <p>Saved to collection.</p>
 
-          <p>
-            <a href="/collection">Open collection</a>
-          </p>
+              <p>
+                <Link to="/collection">Open collection</Link>
+              </p>
 
-          <p>
-            <a href={`/bug-entries/${createdEntryId}`}>Open detail page</a>
-          </p>
-        </div>
+              <p>
+                <Link to={`/bug-entries/${createdEntryId}`}>
+                  Open detail page
+                </Link>
+              </p>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

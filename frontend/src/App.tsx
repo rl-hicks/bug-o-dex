@@ -1,42 +1,75 @@
-import { useEffect, useState } from "react";
-import { getHealth } from "./api/client";
+import { BrowserRouter, Link, Route, Routes, useNavigate } from "react-router-dom";
+
 import { CollectionPage } from "./pages/CollectionPage";
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { BugDetailPage } from "./pages/BugDetailPage";
 import { UploadTestPage } from "./pages/UploadTestPage";
 import { CreateBugPage } from "./pages/CreateBugPage";
 import { UploadPage } from "./pages/UploadPage";
+import { LoginPage } from "./pages/LoginPage";
 
-function App() {
-  const [backendStatus, setBackendStatus] = useState("loading...");
+function AppContent() {
+  
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    getHealth()
-      .then((data) => setBackendStatus(data.status))
-      .catch(() => setBackendStatus("unreachable"));
-  }, []);
+  function handleLogout() {
+    localStorage.removeItem("access_token");
+    navigate("/login");
+  }
 
   return (
+    <main>
+      <h1>Bug-O-Dex</h1>
+
+      <nav>
+        <Link to="/">Home</Link>
+        {" | "}
+        <Link to="/login">Login</Link>
+        {" | "}
+        <Link to="/upload">Upload Bug</Link>
+        {" | "}
+        <Link to="/collection">Collection</Link>
+        {" | "}
+        <button type="button" onClick={handleLogout}>
+          Logout
+        </button>
+      </nav>
+
+      <hr />
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div>
+              <p>Welcome to Bug-O-Dex.</p>
+
+              <ul>
+                <li>
+                  <Link to="/upload">Upload and identify a bug</Link>
+                </li>
+
+                <li>
+                  <Link to="/collection">View collection</Link>
+                </li>
+              </ul>
+            </div>
+          }
+        />
+        <Route path="/collection" element={<CollectionPage />} />
+        <Route path="/bug-entries/:id" element={<BugDetailPage />} />
+        <Route path="/upload-test" element={<UploadTestPage />} />
+        <Route path="/create-bug" element={<CreateBugPage />} />
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </main>
+  );
+}
+
+function App() {
+  return (
     <BrowserRouter>
-      <main>
-        <h1>Bug-O-Dex</h1>
-        <p>Backend status: {backendStatus}</p>
-
-        <nav>
-          <Link to="/collection">Collection</Link>
-        </nav>
-
-        <hr />
-
-        <Routes>
-          <Route path="/" element={<p>Welcome to Bug-O-Dex.</p>} />
-          <Route path="/collection" element={<CollectionPage />} />
-          <Route path="/bug-entries/:id" element={<BugDetailPage />} />
-          <Route path="/upload-test" element={<UploadTestPage />} />
-          <Route path="/create-bug" element={<CreateBugPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-        </Routes>
-      </main>
+      <AppContent />
     </BrowserRouter>
   );
 }

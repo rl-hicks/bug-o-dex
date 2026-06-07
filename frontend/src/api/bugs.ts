@@ -1,7 +1,16 @@
+import { logoutAndRedirect } from "../utils/auth";
+
 const API_BASE_URL = "http://localhost:8000";
 
-function getAccessToken(): string | null {
-  return localStorage.getItem("access_token");
+function getAccessToken(): string {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
+  }
+
+  return token;
 }
 
 function getAuthHeaders() {
@@ -11,6 +20,13 @@ function getAuthHeaders() {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
+}
+
+function handleUnauthorized(response: Response) {
+  if (response.status === 401) {
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
+  }
 }
 
 export type BugEntry = {
@@ -50,12 +66,11 @@ export type UpdateBugEntryInput = {
 };
 
 export async function getBugEntries(): Promise<BugEntry[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/bug-entries`,
-    {
-      headers: getAuthHeaders(),
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/bug-entries`, {
+    headers: getAuthHeaders(),
+  });
+
+  handleUnauthorized(response);
 
   if (!response.ok) {
     throw new Error("Failed to load bug entries");
@@ -69,6 +84,8 @@ export async function getBugEntry(id: string): Promise<BugEntry> {
     headers: getAuthHeaders(),
   });
 
+  handleUnauthorized(response);
+
   if (!response.ok) {
     throw new Error("Failed to load bug entry");
   }
@@ -79,20 +96,13 @@ export async function getBugEntry(id: string): Promise<BugEntry> {
 export async function createBugEntry(
   input: CreateBugEntryInput
 ): Promise<BugEntry> {
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    throw new Error("Missing access token. Please log in again.");
-  }
-
   const response = await fetch(`${API_BASE_URL}/bug-entries`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(input),
   });
+
+  handleUnauthorized(response);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -106,20 +116,13 @@ export async function updateBugEntry(
   id: string,
   input: UpdateBugEntryInput
 ): Promise<BugEntry> {
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    throw new Error("Missing access token. Please log in again.");
-  }
-
   const response = await fetch(`${API_BASE_URL}/bug-entries/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(input),
   });
+
+  handleUnauthorized(response);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -130,11 +133,7 @@ export async function updateBugEntry(
 }
 
 export async function deleteBugEntry(id: string): Promise<void> {
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    throw new Error("Missing access token. Please log in again.");
-  }
+  const token = getAccessToken();
 
   const response = await fetch(`${API_BASE_URL}/bug-entries/${id}`, {
     method: "DELETE",
@@ -142,6 +141,8 @@ export async function deleteBugEntry(id: string): Promise<void> {
       Authorization: `Bearer ${token}`,
     },
   });
+
+  handleUnauthorized(response);
 
   if (!response.ok) {
     const errorText = await response.text();

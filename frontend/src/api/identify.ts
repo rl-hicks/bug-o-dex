@@ -1,3 +1,5 @@
+import { logoutAndRedirect } from "../utils/auth";
+
 const API_BASE_URL = "http://localhost:8000";
 
 export type IdentifyRequest = {
@@ -22,7 +24,8 @@ export async function identifyBug(
   const token = localStorage.getItem("access_token");
 
   if (!token) {
-    throw new Error("Missing access token.");
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
   }
 
   const response = await fetch(`${API_BASE_URL}/identify`, {
@@ -34,9 +37,17 @@ export async function identifyBug(
     body: JSON.stringify(payload),
   });
 
+  if (response.status === 401) {
+    logoutAndRedirect();
+    throw new Error("Unauthorized");
+  }
+
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Bug identification failed: ${response.status} ${errorText}`);
+
+    throw new Error(
+      `Bug identification failed: ${response.status} ${errorText}`
+    );
   }
 
   return response.json();

@@ -54,7 +54,7 @@ export function BugDetailPage() {
         setBugEntry(entry);
         populateForm(entry);
       } catch {
-        setErrorMessage("Could not load bug entry.");
+        setErrorMessage("Bug entry not found.");
       } finally {
         setIsLoading(false);
       }
@@ -95,10 +95,8 @@ export function BugDetailPage() {
       populateForm(updatedEntry);
       setIsEditing(false);
       setStatusMessage("Changes saved.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown update error.";
-      setStatusMessage(message);
+    } catch {
+      setStatusMessage("Could not save changes. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -133,10 +131,8 @@ export function BugDetailPage() {
     try {
       await deleteBugEntry(id);
       navigate("/collection");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown delete error.";
-      setStatusMessage(message);
+    } catch {
+      setStatusMessage("Could not delete bug entry. Please try again.");
       setIsDeleting(false);
     }
   }
@@ -146,11 +142,25 @@ export function BugDetailPage() {
   }
 
   if (errorMessage) {
-    return <p>{errorMessage}</p>;
+    return (
+      <main style={{ padding: "2rem", maxWidth: "720px" }}>
+        <p>{errorMessage}</p>
+        <p>
+          <Link to="/collection">Back to collection</Link>
+        </p>
+      </main>
+    );
   }
 
   if (!bugEntry) {
-    return <p>Bug entry not found.</p>;
+    return (
+      <main style={{ padding: "2rem", maxWidth: "720px" }}>
+        <p>Bug entry not found.</p>
+        <p>
+          <Link to="/collection">Back to collection</Link>
+        </p>
+      </main>
+    );
   }
 
   if (isEditing) {
@@ -294,29 +304,7 @@ export function BugDetailPage() {
 
       <h1>{bugEntry.common_name}</h1>
 
-      <img
-        src={bugEntry.image_url}
-        alt={bugEntry.common_name}
-        width="300"
-        style={{ display: "block", marginBottom: "1rem" }}
-      />
-
-      <div style={{ marginBottom: "1rem" }}>
-        <button type="button" onClick={() => setIsEditing(true)}>
-          Edit
-        </button>
-
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          style={{ marginLeft: "0.5rem" }}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-      </div>
-
-      {statusMessage && <p>{statusMessage}</p>}
+      <img src={bugEntry.image_url} alt={bugEntry.common_name} width="300" />
 
       {bugEntry.category && <p>Category: {bugEntry.category}</p>}
       {bugEntry.date_found && <p>Found: {bugEntry.date_found}</p>}
@@ -349,6 +337,23 @@ export function BugDetailPage() {
           <p>{bugEntry.safety_note}</p>
         </>
       )}
+
+      <div style={{ marginTop: "1rem" }}>
+        <button type="button" onClick={() => setIsEditing(true)}>
+          Edit
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          style={{ marginLeft: "0.5rem" }}
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </button>
+      </div>
+
+      {statusMessage && <p>{statusMessage}</p>}
     </main>
   );
 }
