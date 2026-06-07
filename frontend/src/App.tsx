@@ -7,6 +7,8 @@ import { CreateBugPage } from "./pages/CreateBugPage";
 import { UploadPage } from "./pages/UploadPage";
 import { LoginPage } from "./pages/LoginPage";
 
+const showDiagnosticRoutes = import.meta.env.DEV;
+
 function AppContent() {
   
   const navigate = useNavigate();
@@ -57,8 +59,12 @@ function AppContent() {
         />
         <Route path="/collection" element={<CollectionPage />} />
         <Route path="/bug-entries/:id" element={<BugDetailPage />} />
-        <Route path="/upload-test" element={<UploadTestPage />} />
-        <Route path="/create-bug" element={<CreateBugPage />} />
+        {showDiagnosticRoutes && (
+          <>
+            <Route path="/upload-test" element={<UploadTestPage />} />
+            <Route path="/create-bug" element={<CreateBugPage />} />
+          </>
+        )}
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>

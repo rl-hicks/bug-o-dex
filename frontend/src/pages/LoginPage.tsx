@@ -28,7 +28,7 @@ export function LoginPage() {
 
       setStatusMessage("Login successful.");
       navigate("/upload");
-    } catch (error) {
+    } catch {
       setStatusMessage("Invalid email or password.");
     } finally {
       setIsLoggingIn(false);

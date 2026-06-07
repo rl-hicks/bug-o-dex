@@ -24,18 +24,14 @@ export function UploadPage() {
   const [createdEntryId, setCreatedEntryId] = useState<string>("");
 
   useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl("");
+    if (!previewUrl) {
       return;
     }
 
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreviewUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      URL.revokeObjectURL(previewUrl);
     };
-  }, [selectedFile]);
+  }, [previewUrl]);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -46,11 +42,13 @@ export function UploadPage() {
 
     if (!file) {
       setSelectedFile(null);
+      setPreviewUrl("");
       setStatus("Select a bug photo to begin.");
       return;
     }
 
     setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
     setStatus(`Selected: ${file.name}`);
   }
 
@@ -72,7 +70,7 @@ export function UploadPage() {
     setIdentifyResult(null);
     setCreatedEntryId("");
 
-    let uploadedUrl = "";
+    let uploadedUrl: string;
 
     try {
       setStatus("Uploading image...");

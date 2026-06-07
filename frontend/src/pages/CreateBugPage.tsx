@@ -17,18 +17,14 @@ export function CreateBugPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl("");
+    if (!previewUrl) {
       return;
     }
 
-    const objectUrl = URL.createObjectURL(selectedFile);
-    setPreviewUrl(objectUrl);
-
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      URL.revokeObjectURL(previewUrl);
     };
-  }, [selectedFile]);
+  }, [previewUrl]);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -37,11 +33,13 @@ export function CreateBugPage() {
 
     if (!file) {
       setSelectedFile(null);
+      setPreviewUrl("");
       setStatus("Select a bug photo.");
       return;
     }
 
     setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
     setStatus(`Selected: ${file.name}`);
   }
 
