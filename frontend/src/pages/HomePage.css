@@ -1,0 +1,115 @@
+.home-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+  text-align: left;
+}
+
+.home-hero {
+  padding: 2.5rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 18px;
+  background: #fafafa;
+  margin-bottom: 2rem;
+}
+
+.home-eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5c6b4f;
+}
+
+.home-hero h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.05;
+  color: #1f1f1f;
+}
+
+.home-lede {
+  max-width: 720px;
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: #4f4f5f;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.home-button {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-button.primary {
+  background: #1f1f1f;
+  color: white;
+}
+
+.home-button.secondary {
+  border: 1px solid #b9b9b9;
+  color: #1f1f1f;
+  background: white;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.home-card,
+.home-status {
+  padding: 1.5rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 16px;
+  background: white;
+}
+
+.home-card h3,
+.home-status h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  color: #1f1f1f;
+}
+
+.home-card p,
+.home-status p {
+  margin: 0 0 1rem;
+  line-height: 1.6;
+  color: #555566;
+}
+
+.home-card a {
+  font-weight: 700;
+}
+
+.home-status p {
+  max-width: 820px;
+}
+
+@media (max-width: 720px) {
+  .home-page {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  .home-hero {
+    padding: 1.5rem;
+  }
+
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
