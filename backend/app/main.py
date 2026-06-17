@@ -1,5 +1,8 @@
+from datetime import date
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -7,14 +10,9 @@ from app.config import settings
 from app.database import check_database_connection
 from app.dependencies import get_current_user, get_db
 from app.models import BugEntry, User
-
-from datetime import date
-from pydantic import BaseModel
-
 from app.routers import auth
-from app.routers import uploads
 from app.routers import identify
-
+from app.routers import uploads
 
 
 app = FastAPI(
@@ -40,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class BugEntryCreate(BaseModel):
     image_url: str = "https://example.com/placeholder-bug.jpg"
     common_name: str
@@ -52,6 +51,7 @@ class BugEntryCreate(BaseModel):
     date_found: date | None = None
     is_public: bool = False
 
+
 class BugEntryUpdate(BaseModel):
     image_url: str | None = None
     common_name: str | None = None
@@ -63,6 +63,7 @@ class BugEntryUpdate(BaseModel):
     location_context: str | None = None
     date_found: date | None = None
     is_public: bool | None = None
+
 
 class PublicBugEntryRead(BaseModel):
     id: str
@@ -92,13 +93,20 @@ def database_check():
             detail="Database connection failed",
         )
 
+
 @app.get("/public/bug-entries")
 def list_public_bug_entries(
     db: Session = Depends(get_db),
 ):
+    if settings.public_vault_user_id is None:
+        return []
+
     statement = (
         select(BugEntry)
-        .where(BugEntry.is_public == True)
+        .where(
+            BugEntry.is_public == True,
+            BugEntry.user_id == settings.public_vault_user_id,
+        )
         .order_by(BugEntry.created_at.desc())
     )
     bug_entries = db.scalars(statement).all()
@@ -121,9 +129,16 @@ def get_public_bug_entry(
     bug_entry_id: str,
     db: Session = Depends(get_db),
 ):
+    if settings.public_vault_user_id is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Bug entry not found",
+        )
+
     statement = select(BugEntry).where(
         BugEntry.id == bug_entry_id,
         BugEntry.is_public == True,
+        BugEntry.user_id == settings.public_vault_user_id,
     )
 
     bug_entry = db.scalar(statement)
@@ -143,6 +158,7 @@ def get_public_bug_entry(
         date_found=bug_entry.date_found,
     )
 
+
 @app.get("/bug-entries")
 def list_bug_entries(
     db: Session = Depends(get_db),
@@ -156,6 +172,7 @@ def list_bug_entries(
     bug_entries = db.scalars(statement).all()
 
     return bug_entries
+
 
 @app.get("/bug-entries/{bug_entry_id}")
 def get_bug_entry(
@@ -177,6 +194,7 @@ def get_bug_entry(
         )
 
     return bug_entry
+
 
 @app.patch("/bug-entries/{bug_entry_id}")
 def update_bug_entry(
@@ -208,7 +226,6 @@ def update_bug_entry(
     return bug_entry
 
 
-
 @app.post("/bug-entries")
 def create_bug_entry(
     payload: BugEntryCreate,
@@ -234,7 +251,6 @@ def create_bug_entry(
     db.refresh(bug_entry)
 
     return bug_entry
-
 
 
 @app.delete("/bug-entries/{bug_entry_id}")

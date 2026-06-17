@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
 
     registration_enabled: bool = False
+    public_vault_user_id: str | None = None
 
     secret_key: str
     algorithm: str = "HS256"
