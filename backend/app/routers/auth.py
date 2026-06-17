@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password
+from app.config import settings
 from app.dependencies import get_current_user, get_db
 from app.models.user import User
 from app.schemas.auth import TokenResponse, UserLogin, UserRead, UserRegister
@@ -16,6 +17,12 @@ def register_user(
     user_data: UserRegister,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
+    if not settings.allow_registration:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not found",
+        )
+
     existing_user = db.scalar(
         select(User).where(User.email == user_data.email)
     )

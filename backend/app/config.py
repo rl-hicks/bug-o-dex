@@ -8,6 +8,8 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173"
 
+    registration_enabled: bool = False
+
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
@@ -21,6 +23,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
+
+    @property
+    def allow_registration(self) -> bool:
+        return not self.is_production or self.registration_enabled
 
     class Config:
         env_file = ".env"
