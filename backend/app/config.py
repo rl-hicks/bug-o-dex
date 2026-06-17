@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     openai_api_key: str
 
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.lower() == "production"
+
     class Config:
         env_file = ".env"
 

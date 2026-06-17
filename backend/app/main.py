@@ -17,7 +17,12 @@ from app.routers import identify
 
 
 
-app = FastAPI(title="Bug-O-Dex API")
+app = FastAPI(
+    title="Bug-O-Dex API",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
+)
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
@@ -65,11 +70,17 @@ def health_check():
 
 @app.get("/db-check")
 def database_check():
+    if settings.is_production:
+        raise HTTPException(status_code=404, detail="Not found")
+
     try:
         check_database_connection()
         return {"database": "connected"}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed",
+        )
 
 @app.get("/bug-entries")
 def list_bug_entries(
