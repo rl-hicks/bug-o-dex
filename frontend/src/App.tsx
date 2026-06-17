@@ -7,11 +7,11 @@ import { CreateBugPage } from "./pages/CreateBugPage";
 import { UploadPage } from "./pages/UploadPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PublicBugDetailPage } from "./pages/PublicBugDetailPage";
+import { HomePage } from "./pages/HomePage";
 
 const showDiagnosticRoutes = import.meta.env.DEV;
 
 function AppContent() {
-  
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -40,24 +40,7 @@ function AppContent() {
       <hr />
 
       <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              <p>Welcome to Bug-O-Dex.</p>
-
-              <ul>
-                <li>
-                  <Link to="/upload">Upload and identify a bug</Link>
-                </li>
-
-                <li>
-                  <Link to="/collection">View collection</Link>
-                </li>
-              </ul>
-            </div>
-          }
-        />
+        <Route path="/" element={<HomePage />} />
         <Route path="/collection" element={<CollectionPage />} />
         <Route path="/public/bug-entries/:id" element={<PublicBugDetailPage />} />
         <Route path="/bug-entries/:id" element={<BugDetailPage />} />
