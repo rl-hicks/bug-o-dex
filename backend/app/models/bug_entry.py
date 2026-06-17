@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +34,13 @@ class BugEntry(Base):
     safety_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     location_context: Mapped[str | None] = mapped_column(Text, nullable=True)
     date_found: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    is_public: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        default=False,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

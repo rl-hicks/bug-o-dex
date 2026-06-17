@@ -50,6 +50,7 @@ class BugEntryCreate(BaseModel):
     safety_note: str | None = None
     location_context: str | None = None
     date_found: date | None = None
+    is_public: bool = False
 
 class BugEntryUpdate(BaseModel):
     image_url: str | None = None
@@ -60,6 +61,15 @@ class BugEntryUpdate(BaseModel):
     short_description: str | None = None
     safety_note: str | None = None
     location_context: str | None = None
+    date_found: date | None = None
+    is_public: bool | None = None
+
+class PublicBugEntryRead(BaseModel):
+    id: str
+    image_url: str
+    common_name: str
+    category: str | None = None
+    short_description: str | None = None
     date_found: date | None = None
 
 
@@ -81,6 +91,57 @@ def database_check():
             status_code=500,
             detail="Database connection failed",
         )
+
+@app.get("/public/bug-entries")
+def list_public_bug_entries(
+    db: Session = Depends(get_db),
+):
+    statement = (
+        select(BugEntry)
+        .where(BugEntry.is_public == True)
+        .order_by(BugEntry.created_at.desc())
+    )
+    bug_entries = db.scalars(statement).all()
+
+    return [
+        PublicBugEntryRead(
+            id=str(entry.id),
+            image_url=entry.image_url,
+            common_name=entry.common_name,
+            category=entry.category,
+            short_description=entry.short_description,
+            date_found=entry.date_found,
+        )
+        for entry in bug_entries
+    ]
+
+
+@app.get("/public/bug-entries/{bug_entry_id}")
+def get_public_bug_entry(
+    bug_entry_id: str,
+    db: Session = Depends(get_db),
+):
+    statement = select(BugEntry).where(
+        BugEntry.id == bug_entry_id,
+        BugEntry.is_public == True,
+    )
+
+    bug_entry = db.scalar(statement)
+
+    if bug_entry is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Bug entry not found",
+        )
+
+    return PublicBugEntryRead(
+        id=str(bug_entry.id),
+        image_url=bug_entry.image_url,
+        common_name=bug_entry.common_name,
+        category=bug_entry.category,
+        short_description=bug_entry.short_description,
+        date_found=bug_entry.date_found,
+    )
 
 @app.get("/bug-entries")
 def list_bug_entries(
@@ -165,6 +226,7 @@ def create_bug_entry(
         safety_note=payload.safety_note,
         location_context=payload.location_context,
         date_found=payload.date_found,
+        is_public=payload.is_public,
     )
 
     db.add(bug_entry)
