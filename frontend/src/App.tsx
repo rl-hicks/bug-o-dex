@@ -6,6 +6,7 @@ import { UploadTestPage } from "./pages/UploadTestPage";
 import { CreateBugPage } from "./pages/CreateBugPage";
 import { UploadPage } from "./pages/UploadPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PublicBugDetailPage } from "./pages/PublicBugDetailPage";
 
 const showDiagnosticRoutes = import.meta.env.DEV;
 
@@ -58,6 +59,7 @@ function AppContent() {
           }
         />
         <Route path="/collection" element={<CollectionPage />} />
+        <Route path="/public/bug-entries/:id" element={<PublicBugDetailPage />} />
         <Route path="/bug-entries/:id" element={<BugDetailPage />} />
         {showDiagnosticRoutes && (
           <>

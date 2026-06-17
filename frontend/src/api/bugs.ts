@@ -28,6 +28,26 @@ function handleUnauthorized(response: Response) {
   }
 }
 
+export async function getPublicBugEntries(): Promise<PublicBugEntry[]> {
+  const response = await fetch(`${API_BASE_URL}/public/bug-entries`);
+
+  if (!response.ok) {
+    throw new Error("Failed to load public bug entries");
+  }
+
+  return response.json();
+}
+
+export async function getPublicBugEntry(id: string): Promise<PublicBugEntry> {
+  const response = await fetch(`${API_BASE_URL}/public/bug-entries/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to load public bug entry");
+  }
+
+  return response.json();
+}
+
 export type BugEntry = {
   id: string;
   image_url: string;
@@ -38,6 +58,15 @@ export type BugEntry = {
   short_description: string | null;
   safety_note: string | null;
   location_context: string | null;
+  date_found: string | null;
+};
+
+export type PublicBugEntry = {
+  id: string;
+  image_url: string;
+  common_name: string;
+  category: string | null;
+  short_description: string | null;
   date_found: string | null;
 };
 
