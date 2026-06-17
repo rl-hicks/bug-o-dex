@@ -107,6 +107,31 @@ export async function getBugEntries(): Promise<BugEntry[]> {
   return response.json();
 }
 
+export async function getBugEntriesWithoutRedirect(): Promise<BugEntry[]> {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/bug-entries`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.status === 401) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to load bug entries");
+  }
+
+  return response.json();
+}
+
 export async function getBugEntry(id: string): Promise<BugEntry> {
   const response = await fetch(`${API_BASE_URL}/bug-entries/${id}`, {
     headers: getAuthHeaders(),

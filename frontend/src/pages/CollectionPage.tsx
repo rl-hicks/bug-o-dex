@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { BugEntry, PublicBugEntry } from "../api/bugs";
-import { getBugEntries, getPublicBugEntries } from "../api/bugs";
+import {
+  getBugEntriesWithoutRedirect,
+  getPublicBugEntries,
+} from "../api/bugs";
 
 type CollectionEntry = BugEntry | PublicBugEntry;
 
@@ -13,25 +16,35 @@ export function CollectionPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadBugEntries() {
-      const token = localStorage.getItem("access_token");
+  async function loadBugEntries() {
+    const token = localStorage.getItem("access_token");
 
-      try {
-        if (token) {
-          const entries = await getBugEntries();
+    try {
+      if (token) {
+        try {
+          const entries = await getBugEntriesWithoutRedirect();
           setBugEntries(entries);
           setIsPublicMode(false);
-        } else {
-          const entries = await getPublicBugEntries();
-          setBugEntries(entries);
+          return;
+        } catch {
+          localStorage.removeItem("access_token");
+
+          const publicEntries = await getPublicBugEntries();
+          setBugEntries(publicEntries);
           setIsPublicMode(true);
+          return;
         }
-      } catch {
-        setErrorMessage("Could not load bug entries.");
-      } finally {
-        setIsLoading(false);
       }
+
+      const entries = await getPublicBugEntries();
+      setBugEntries(entries);
+      setIsPublicMode(true);
+    } catch {
+      setErrorMessage("Could not load bug entries.");
+    } finally {
+      setIsLoading(false);
     }
+  }
 
     loadBugEntries();
   }, []);
