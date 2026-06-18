@@ -2,14 +2,14 @@ from datetime import date
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import check_database_connection
 from app.dependencies import get_current_user, get_db
-from app.models import BugEntry, User
+from app.models import BugEntry, ContactMessage, User
 from app.routers import auth
 from app.routers import identify
 from app.routers import uploads
@@ -72,6 +72,20 @@ class PublicBugEntryRead(BaseModel):
     category: str | None = None
     short_description: str | None = None
     date_found: date | None = None
+
+
+class ContactMessageCreate(BaseModel):
+    name: str | None = Field(default=None, max_length=80)
+    email: str | None = Field(default=None, max_length=120)
+    message: str = Field(min_length=20, max_length=300)
+
+
+class ContactMessageRead(BaseModel):
+    id: str
+    name: str | None = None
+    email: str | None = None
+    message: str
+    created_at: str
 
 
 @app.get("/health")
@@ -157,6 +171,59 @@ def get_public_bug_entry(
         short_description=bug_entry.short_description,
         date_found=bug_entry.date_found,
     )
+
+
+@app.post("/contact-messages")
+def create_contact_message(
+    payload: ContactMessageCreate,
+    db: Session = Depends(get_db),
+):
+    name = payload.name.strip() if payload.name else None
+    email = payload.email.strip() if payload.email else None
+    message = payload.message.strip()
+
+    if len(message) < 20:
+        raise HTTPException(
+            status_code=422,
+            detail="Message must be at least 20 characters.",
+        )
+
+    contact_message = ContactMessage(
+        name=name or None,
+        email=email or None,
+        message=message,
+    )
+
+    db.add(contact_message)
+    db.commit()
+
+    return {"message": "Message received."}
+
+
+@app.get("/admin/contact-messages")
+def list_contact_messages(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if (
+        settings.admin_user_id is None
+        or str(current_user.id) != settings.admin_user_id
+    ):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    statement = select(ContactMessage).order_by(ContactMessage.created_at.desc())
+    contact_messages = db.scalars(statement).all()
+
+    return [
+        ContactMessageRead(
+            id=str(contact_message.id),
+            name=contact_message.name,
+            email=contact_message.email,
+            message=contact_message.message,
+            created_at=contact_message.created_at.isoformat(),
+        )
+        for contact_message in contact_messages
+    ]
 
 
 @app.get("/bug-entries")
