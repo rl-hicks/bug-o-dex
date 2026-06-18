@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     registration_enabled: bool = False
     public_vault_user_id: str | None = None
+    admin_user_id: str | None = None
 
     secret_key: str
     algorithm: str = "HS256"
