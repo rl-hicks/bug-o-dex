@@ -7,6 +7,8 @@ import {
   getPublicBugEntries,
 } from "../api/bugs";
 
+import "./CollectionPage.css";
+
 type CollectionEntry = BugEntry | PublicBugEntry;
 
 export function CollectionPage() {
@@ -16,98 +18,135 @@ export function CollectionPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-  async function loadBugEntries() {
-    const token = localStorage.getItem("access_token");
+    async function loadBugEntries() {
+      const token = localStorage.getItem("access_token");
 
-    try {
-      if (token) {
-        try {
-          const entries = await getBugEntriesWithoutRedirect();
-          setBugEntries(entries);
-          setIsPublicMode(false);
-          return;
-        } catch {
-          localStorage.removeItem("access_token");
+      try {
+        if (token) {
+          try {
+            const entries = await getBugEntriesWithoutRedirect();
+            setBugEntries(entries);
+            setIsPublicMode(false);
+            return;
+          } catch {
+            localStorage.removeItem("access_token");
 
-          const publicEntries = await getPublicBugEntries();
-          setBugEntries(publicEntries);
-          setIsPublicMode(true);
-          return;
+            const publicEntries = await getPublicBugEntries();
+            setBugEntries(publicEntries);
+            setIsPublicMode(true);
+            return;
+          }
         }
-      }
 
-      const entries = await getPublicBugEntries();
-      setBugEntries(entries);
-      setIsPublicMode(true);
-    } catch {
-      setErrorMessage("Could not load bug entries.");
-    } finally {
-      setIsLoading(false);
+        const entries = await getPublicBugEntries();
+        setBugEntries(entries);
+        setIsPublicMode(true);
+      } catch {
+        setErrorMessage("Could not load bug entries.");
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
 
     loadBugEntries();
   }, []);
 
+  const title = isPublicMode ? "Example Bug-O-Dex Collection" : "My Collection";
+
   if (isLoading) {
-    return <p>Loading collection...</p>;
+    return (
+      <main className="collection-page">
+        <p className="collection-status">Loading collection...</p>
+      </main>
+    );
   }
 
   if (errorMessage) {
     return (
-      <main>
-        <h1>{isPublicMode ? "Example Bug-O-Dex Collection" : "My Collection"}</h1>
-        <p>{errorMessage}</p>
-        <p>
-          <Link to="/">Return home</Link>
-        </p>
+      <main className="collection-page">
+        <section className="collection-header">
+          <p className="collection-eyebrow">
+            {isPublicMode ? "Public vault" : "Private vault"}
+          </p>
+
+          <h2>{title}</h2>
+
+          <p className="collection-description">{errorMessage}</p>
+
+          <Link className="collection-button secondary" to="/">
+            Return home
+          </Link>
+        </section>
       </main>
     );
   }
 
   if (bugEntries.length === 0) {
     return (
-      <main>
-        <h1>{isPublicMode ? "Example Bug-O-Dex Collection" : "My Collection"}</h1>
+      <main className="collection-page">
+        <section className="collection-header">
+          <p className="collection-eyebrow">
+            {isPublicMode ? "Public vault" : "Private vault"}
+          </p>
 
-        {isPublicMode ? (
-          <>
-            <p>No public bugs are available yet.</p>
-            <p>
-              <Link to="/login">Log in to manage your own collection</Link>
-            </p>
-          </>
-        ) : (
-          <>
-            <p>No bugs found yet.</p>
-            <p>
-              <Link to="/upload">Upload your first bug</Link>
-            </p>
-          </>
-        )}
+          <h2>{title}</h2>
+
+          {isPublicMode ? (
+            <>
+              <p className="collection-description">
+                No public bugs are available yet.
+              </p>
+
+              <Link className="collection-button secondary" to="/login">
+                Log in to manage your own collection
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="collection-description">No bugs found yet.</p>
+
+              <Link className="collection-button primary" to="/upload">
+                Upload your first bug
+              </Link>
+            </>
+          )}
+        </section>
       </main>
     );
   }
 
   return (
-    <main>
-      <h1>{isPublicMode ? "Example Bug-O-Dex Collection" : "My Collection"}</h1>
-
-      {isPublicMode ? (
-        <p>
-          A read-only sample from the developer&apos;s Bug-O-Dex.{" "}
-          <Link to="/login">Log in</Link> to upload and manage your own private
-          collection.
+    <main className="collection-page">
+      <section className="collection-header">
+        <p className="collection-eyebrow">
+          {isPublicMode ? "Public vault" : "Private vault"}
         </p>
-      ) : (
-        <p>
-          <Link to="/upload">Upload new bug</Link>
-        </p>
-      )}
 
-      <div>
+        <h2>{title}</h2>
+
+        {isPublicMode ? (
+          <p className="collection-description">
+            A read-only sample from the developer&apos;s Bug-O-Dex.{" "}
+            <Link to="/login">Log in</Link> to upload and manage your own
+            private collection.
+          </p>
+        ) : (
+          <p className="collection-description">
+            Your saved bug discoveries are listed below.
+          </p>
+        )}
+
+        {!isPublicMode && (
+          <Link className="collection-button primary" to="/upload">
+            Upload new bug
+          </Link>
+        )}
+      </section>
+
+      <section className="collection-grid" aria-label="Bug collection">
         {bugEntries.map((bug) => (
           <Link
+            className="collection-card"
             key={bug.id}
             to={
               isPublicMode
@@ -115,18 +154,23 @@ export function CollectionPage() {
                 : `/bug-entries/${bug.id}`
             }
           >
-            <article>
-              <img src={bug.image_url} alt={bug.common_name} width="200" />
+            <img
+              className="collection-card-image"
+              src={bug.image_url}
+              alt={bug.common_name}
+            />
 
-              <h2>{bug.common_name}</h2>
+            <div className="collection-card-body">
+              <h3>{bug.common_name}</h3>
 
-              {bug.category && <p>Category: {bug.category}</p>}
-
-              {bug.date_found && <p>Found: {bug.date_found}</p>}
-            </article>
+              <div className="collection-card-meta">
+                {bug.category && <span>{bug.category}</span>}
+                {bug.date_found && <span>Found {bug.date_found}</span>}
+              </div>
+            </div>
           </Link>
         ))}
-      </div>
+      </section>
     </main>
   );
 }
