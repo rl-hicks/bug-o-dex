@@ -54,12 +54,20 @@ export function CollectionPage() {
   const title = isPublicMode ? "Example Bug-O-Dex Collection" : "My Collection";
 
   if (isLoading) {
-    return (
-      <main className="collection-page">
-        <p className="collection-status">Loading collection...</p>
-      </main>
-    );
-  }
+  return (
+    <main className="collection-page">
+      <section className="collection-status">
+        <p className="collection-status-title">Loading collection...</p>
+
+        <p className="collection-status-copy">
+          The backend is hosted on Render&apos;s free tier, so it may spin down
+          after inactivity. If the server is waking up, the first request can
+          take up to a minute.
+        </p>
+      </section>
+    </main>
+  );
+}
 
   if (errorMessage) {
     return (

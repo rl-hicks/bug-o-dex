@@ -122,6 +122,19 @@
   color: #555566;
 }
 
+.collection-status-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.collection-status-copy {
+  max-width: 620px;
+  margin: 0;
+  line-height: 1.6;
+}
+
 @media (max-width: 720px) {
   .collection-page {
     padding: 1rem 0.75rem 3rem;
