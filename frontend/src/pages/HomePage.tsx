@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import "./HomePage.css";
 
-import "./HomePage.css";
-
 export function HomePage() {
   return (
     <div className="home-page">
@@ -81,6 +79,14 @@ export function HomePage() {
           style entries, better collection mechanics, improved public sharing,
           and a more polished kid-and-parent discovery experience.
         </p>
+      </section>
+
+      <section className="home-status">
+        <h3>Contact</h3>
+
+        <p>Have feedback, an access question, or a project-related note?</p>
+
+        <Link to="/contact">Contact developer</Link>
       </section>
     </div>
   );
