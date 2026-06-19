@@ -89,14 +89,6 @@ class ContactMessageRead(BaseModel):
     created_at: str
 
 
-class EventLogRead(BaseModel):
-    id: str
-    event_type: str
-    user_id: str | None = None
-    event_metadata: dict | None = None
-    created_at: str
-
-
 class EventCountRead(BaseModel):
     event_type: str
     count: int
@@ -292,25 +284,6 @@ def get_event_summary(
         ],
     )
 
-
-@app.get("/admin/event-logs")
-def list_event_logs(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_user),
-):
-    statement = select(EventLog).order_by(EventLog.created_at.desc())
-    event_logs = db.scalars(statement).all()
-
-    return [
-        EventLogRead(
-            id=str(event_log.id),
-            event_type=event_log.event_type,
-            user_id=str(event_log.user_id) if event_log.user_id else None,
-            event_metadata=event_log.event_metadata,
-            created_at=event_log.created_at.isoformat(),
-        )
-        for event_log in event_logs
-    ]
 
 
 @app.get("/admin/contact-messages")

@@ -19,6 +19,24 @@ ALLOWED_IMAGE_TYPES = {
 }
 
 
+async def read_upload_with_limit(file: UploadFile, max_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    total_bytes = 0
+
+    while chunk := await file.read(1024 * 1024):
+        total_bytes += len(chunk)
+
+        if total_bytes > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail="Image file is too large. Maximum upload size is 10 MB.",
+            )
+
+        chunks.append(chunk)
+
+    return b"".join(chunks)
+
+
 @router.post("")
 async def upload_image(
     file: UploadFile = File(...),
@@ -34,9 +52,9 @@ async def upload_image(
     extension = ALLOWED_IMAGE_TYPES[file.content_type]
     object_path = f"users/{current_user.id}/{uuid.uuid4()}{extension}"
 
-    file_bytes = await file.read()
-
-    if len(file_bytes) > settings.max_upload_bytes:
+    try:
+        file_bytes = await read_upload_with_limit(file, settings.max_upload_bytes)
+    except HTTPException:
         log_event(
             db,
             "upload_failed",
@@ -44,13 +62,9 @@ async def upload_image(
             event_metadata={
                 "content_type": file.content_type,
                 "reason": "file_too_large",
-                "size_bytes": len(file_bytes),
             },
         )
-        raise HTTPException(
-            status_code=413,
-            detail="Image file is too large. Maximum upload size is 5 MB.",
-        )
+        raise
 
     supabase = create_client(
         settings.supabase_url,
@@ -75,7 +89,7 @@ async def upload_image(
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Image upload failed: {exc}",
+            detail="Image upload failed. Please try again.",
         )
 
     public_url = supabase.storage.from_(
