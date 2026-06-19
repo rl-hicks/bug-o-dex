@@ -10,7 +10,7 @@ from app.config import settings
 from app.database import check_database_connection
 from app.dependencies import get_current_user, get_db, require_admin_user
 from app.event_logging import log_event
-from app.models import BugEntry, ContactMessage, EventLog, User
+from app.models import BugEntry, ContactMessage, User
 from app.routers import auth
 from app.routers import identify
 from app.routers import uploads

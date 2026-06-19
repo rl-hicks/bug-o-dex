@@ -80,7 +80,7 @@ async def upload_image(
                 "upsert": "false",
             },
         )
-    except Exception as exc:
+    except Exception:
         log_event(
             db,
             "upload_failed",

@@ -2,8 +2,6 @@ import { BrowserRouter, Link, Route, Routes, useNavigate } from "react-router-do
 
 import { CollectionPage } from "./pages/CollectionPage";
 import { BugDetailPage } from "./pages/BugDetailPage";
-import { UploadTestPage } from "./pages/UploadTestPage";
-import { CreateBugPage } from "./pages/CreateBugPage";
 import { UploadPage } from "./pages/UploadPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PublicBugDetailPage } from "./pages/PublicBugDetailPage";
@@ -48,8 +46,6 @@ function AppContent() {
         <Route path="/bug-entries/:id" element={<BugDetailPage />} />
         {showDiagnosticRoutes && (
           <>
-            <Route path="/upload-test" element={<UploadTestPage />} />
-            <Route path="/create-bug" element={<CreateBugPage />} />
           </>
         )}
         <Route path="/upload" element={<UploadPage />} />
