@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_secret_key: str
     supabase_bucket_name: str = "bug-images"
+    max_upload_bytes: int = 5_242_880
 
     openai_api_key: str
 

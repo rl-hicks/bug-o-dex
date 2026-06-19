@@ -36,6 +36,22 @@ async def upload_image(
 
     file_bytes = await file.read()
 
+    if len(file_bytes) > settings.max_upload_bytes:
+        log_event(
+            db,
+            "upload_failed",
+            user_id=current_user.id,
+            event_metadata={
+                "content_type": file.content_type,
+                "reason": "file_too_large",
+                "size_bytes": len(file_bytes),
+            },
+        )
+        raise HTTPException(
+            status_code=413,
+            detail="Image file is too large. Maximum upload size is 5 MB.",
+        )
+
     supabase = create_client(
         settings.supabase_url,
         settings.supabase_secret_key,
