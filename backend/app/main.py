@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import check_database_connection
 from app.dependencies import get_current_user, get_db, require_admin_user
-from app.models import BugEntry, ContactMessage, User
+from app.event_logging import log_event
+from app.models import BugEntry, ContactMessage, EventLog, User
 from app.routers import auth
 from app.routers import identify
 from app.routers import uploads
@@ -88,6 +89,14 @@ class ContactMessageRead(BaseModel):
     created_at: str
 
 
+class EventLogRead(BaseModel):
+    id: str
+    event_type: str
+    user_id: str | None = None
+    event_metadata: dict | None = None
+    created_at: str
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -112,6 +121,8 @@ def database_check():
 def list_public_bug_entries(
     db: Session = Depends(get_db),
 ):
+    log_event(db, "public_vault_viewed")
+
     if settings.public_vault_user_id is None:
         return []
 
@@ -143,6 +154,12 @@ def get_public_bug_entry(
     bug_entry_id: str,
     db: Session = Depends(get_db),
 ):
+    log_event(
+        db,
+        "public_bug_detail_viewed",
+        event_metadata={"bug_entry_id": bug_entry_id},
+    )
+
     if settings.public_vault_user_id is None:
         raise HTTPException(
             status_code=404,
@@ -197,6 +214,8 @@ def create_contact_message(
     db.add(contact_message)
     db.commit()
 
+    log_event(db, "contact_message_sent")
+
     return {"message": "Message received."}
 
 
@@ -208,6 +227,26 @@ def get_admin_status(
         "is_admin": True,
         "user_id": str(current_user.id),
     }
+
+
+@app.get("/admin/event-logs")
+def list_event_logs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_user),
+):
+    statement = select(EventLog).order_by(EventLog.created_at.desc())
+    event_logs = db.scalars(statement).all()
+
+    return [
+        EventLogRead(
+            id=str(event_log.id),
+            event_type=event_log.event_type,
+            user_id=str(event_log.user_id) if event_log.user_id else None,
+            event_metadata=event_log.event_metadata,
+            created_at=event_log.created_at.isoformat(),
+        )
+        for event_log in event_logs
+    ]
 
 
 @app.get("/admin/contact-messages")
@@ -320,6 +359,13 @@ def create_bug_entry(
     db.add(bug_entry)
     db.commit()
     db.refresh(bug_entry)
+
+    log_event(
+        db,
+        "bug_saved",
+        user_id=current_user.id,
+        event_metadata={"bug_entry_id": str(bug_entry.id)},
+    )
 
     return bug_entry
 

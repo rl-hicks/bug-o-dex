@@ -2,9 +2,11 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from openai import OpenAI
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_db
+from app.event_logging import log_event
 from app.models.user import User
 from app.schemas.identify import IdentifyRequest, IdentifyResponse
 
@@ -16,6 +18,7 @@ router = APIRouter(prefix="/identify", tags=["identify"])
 async def identify_bug(
     payload: IdentifyRequest,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     client = OpenAI(api_key=settings.openai_api_key)
 

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.auth import create_access_token, hash_password, verify_password
 from app.config import settings
 from app.dependencies import get_current_user, get_db
+from app.event_logging import log_event
 from app.models.user import User
 from app.schemas.auth import TokenResponse, UserLogin, UserRead, UserRegister
 
@@ -45,6 +46,8 @@ def register_user(
 
     access_token = create_access_token({"sub": str(user.id)})
 
+    log_event(db, "registration_succeeded", user_id=user.id)
+
     return TokenResponse(access_token=access_token)
 
 
@@ -58,18 +61,30 @@ def login_user(
     )
 
     if user is None or user.password_hash is None:
+        log_event(
+            db,
+            "login_failed",
+            event_metadata={"reason": "invalid_credentials"},
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
     if not verify_password(login_data.password, user.password_hash):
+        log_event(
+            db,
+            "login_failed",
+            event_metadata={"reason": "invalid_credentials"},
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
     access_token = create_access_token({"sub": str(user.id)})
+
+    log_event(db, "login_succeeded", user_id=user.id)
 
     return TokenResponse(access_token=access_token)
 

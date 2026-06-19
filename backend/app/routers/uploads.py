@@ -2,9 +2,11 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from supabase import create_client
+from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_db
+from app.event_logging import log_event
 from app.models.user import User
 
 
@@ -21,6 +23,7 @@ ALLOWED_IMAGE_TYPES = {
 async def upload_image(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
@@ -48,6 +51,12 @@ async def upload_image(
             },
         )
     except Exception as exc:
+        log_event(
+            db,
+            "upload_failed",
+            user_id=current_user.id,
+            event_metadata={"content_type": file.content_type},
+        )
         raise HTTPException(
             status_code=500,
             detail=f"Image upload failed: {exc}",
