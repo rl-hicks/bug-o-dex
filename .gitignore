@@ -46,3 +46,6 @@ Thumbs.db
 # Docker
 # =========================
 docker-data/
+# Local database backups
+backups/
+*.dump
