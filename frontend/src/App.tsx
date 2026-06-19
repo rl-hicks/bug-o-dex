@@ -9,6 +9,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { PublicBugDetailPage } from "./pages/PublicBugDetailPage";
 import { HomePage } from "./pages/HomePage";
 import { ContactPage } from "./pages/ContactPage";
+import { AdminPage } from "./pages/AdminPage";
 
 const showDiagnosticRoutes = import.meta.env.DEV;
 
@@ -54,6 +55,7 @@ function AppContent() {
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </main>
   );

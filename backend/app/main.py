@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, text as sql_text
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -95,6 +95,20 @@ class EventLogRead(BaseModel):
     user_id: str | None = None
     event_metadata: dict | None = None
     created_at: str
+
+
+class EventCountRead(BaseModel):
+    event_type: str
+    count: int
+
+
+class EventSummaryRead(BaseModel):
+    total_event_rows: int
+    event_log_size_bytes: int
+    event_log_size_pretty: str
+    free_storage_reference_bytes: int
+    approx_percent_of_0_5_gb: float
+    counts: list[EventCountRead]
 
 
 @app.get("/health")
@@ -227,6 +241,56 @@ def get_admin_status(
         "is_admin": True,
         "user_id": str(current_user.id),
     }
+
+
+@app.get("/admin/event-summary")
+def get_event_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_user),
+):
+    storage_row = db.execute(
+        sql_text(
+            '''
+            select
+              count(*)::int as total_event_rows,
+              pg_total_relation_size('event_logs')::bigint as event_log_size_bytes,
+              pg_size_pretty(pg_total_relation_size('event_logs')) as event_log_size_pretty
+            from event_logs
+            '''
+        )
+    ).mappings().one()
+
+    count_rows = db.execute(
+        sql_text(
+            '''
+            select event_type, count(*)::int as count
+            from event_logs
+            group by event_type
+            order by event_type
+            '''
+        )
+    ).mappings().all()
+
+    free_storage_reference_bytes = 536_870_912
+    event_log_size_bytes = int(storage_row["event_log_size_bytes"])
+
+    return EventSummaryRead(
+        total_event_rows=int(storage_row["total_event_rows"]),
+        event_log_size_bytes=event_log_size_bytes,
+        event_log_size_pretty=str(storage_row["event_log_size_pretty"]),
+        free_storage_reference_bytes=free_storage_reference_bytes,
+        approx_percent_of_0_5_gb=round(
+            (event_log_size_bytes / free_storage_reference_bytes) * 100,
+            6,
+        ),
+        counts=[
+            EventCountRead(
+                event_type=str(row["event_type"]),
+                count=int(row["count"]),
+            )
+            for row in count_rows
+        ],
+    )
 
 
 @app.get("/admin/event-logs")
