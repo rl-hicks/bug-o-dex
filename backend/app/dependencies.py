@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth import decode_access_token
+from app.config import settings
 from app.models.user import User
 
 security = HTTPBearer()
@@ -50,3 +51,18 @@ def get_current_user(
         )
 
     return user
+
+def require_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if (
+        settings.admin_user_id is None
+        or str(current_user.id) != settings.admin_user_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden",
+        )
+
+    return current_user
+

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import check_database_connection
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db, require_admin_user
 from app.models import BugEntry, ContactMessage, User
 from app.routers import auth
 from app.routers import identify
@@ -200,17 +200,21 @@ def create_contact_message(
     return {"message": "Message received."}
 
 
+@app.get("/admin/status")
+def get_admin_status(
+    current_user: User = Depends(require_admin_user),
+):
+    return {
+        "is_admin": True,
+        "user_id": str(current_user.id),
+    }
+
+
 @app.get("/admin/contact-messages")
 def list_contact_messages(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin_user),
 ):
-    if (
-        settings.admin_user_id is None
-        or str(current_user.id) != settings.admin_user_id
-    ):
-        raise HTTPException(status_code=403, detail="Forbidden")
-
     statement = select(ContactMessage).order_by(ContactMessage.created_at.desc())
     contact_messages = db.scalars(statement).all()
 
